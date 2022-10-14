@@ -7,21 +7,31 @@ package com.bright.peopledb.model;
  */
 
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.ZonedDateTime;
-
+@Getter
 public class Person {
 
     @Setter
+    @Getter(AccessLevel.NONE)
     private Long id;
-    public Person(String firstName, String lastName, ZonedDateTime zonedDateTime) {
+
+    private String firstName;
+    private String lastName;
+    private ZonedDateTime dateOfBirth;
+
+    public Person(String firstName, String lastName, ZonedDateTime dateOfBirth) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
 
     }
 
     public Long getId(){
-        return 1L;
+        return id;
     }
 
 }

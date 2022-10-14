@@ -9,8 +9,36 @@ package com.bright.peopledb.repository;
 
 import com.bright.peopledb.model.Person;
 
+import java.sql.*;
+import java.time.ZoneId;
+
 public class PeopleRepository {
-    public Person save(Person person) {
+
+    private Connection connection;
+    public PeopleRepository(Connection connection) {
+        this.connection = connection;
+    }
+
+    /**
+     * @param person The person to be saved inside the database
+     * @return The saved person in the database
+     */
+    public Person save(Person person){
+        String sql = "INSERT INTO PERSON (FIRST_NAME, LAST_NAME, DOB) VALUES(?, ?, ?)";
+        try(PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1,person.getFirstName());
+            preparedStatement.setString(2,person.getLastName());
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(person.getDateOfBirth().withZoneSameInstant(ZoneId.of("+0")).toLocalDateTime()));
+            int recordsAffected = preparedStatement.executeUpdate(); //to execute the query
+            ResultSet resultSet = preparedStatement.getGeneratedKeys();
+            while (resultSet.next()){
+                long id = resultSet.getLong(1);
+                person.setId(id);
+            }
+            System.out.printf("Records affected: %d%n", recordsAffected);
+        } catch (SQLException e) {
+           e.printStackTrace();
+        }
         return person;
     }
 }
