@@ -12,7 +12,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Objects;
+
 @Getter
 @ToString
 public class Person {
@@ -36,4 +39,17 @@ public class Person {
         return id;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Person person = (Person) o;
+        return Objects.equals(id, person.id) && firstName.equals(person.firstName) && lastName.equals(person.lastName) &&
+                dateOfBirth.withZoneSameInstant(ZoneId.of("+0")).equals(person.dateOfBirth.withZoneSameInstant(ZoneId.of("+0")));
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, firstName, lastName, dateOfBirth);
+    }
 }

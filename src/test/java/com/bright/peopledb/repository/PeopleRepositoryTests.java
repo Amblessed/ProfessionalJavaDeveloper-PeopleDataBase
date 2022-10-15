@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,7 +77,14 @@ class PeopleRepositoryTests {
         assertThat(savedPerson1.getId()).isNotEqualTo(savedPerson2.getId());
     }
 
-
-
+    @Test
+    @DisplayName("Can find a user in DB by ID")
+    void canFindPersonByID(){
+        printNames(firstName, lastName);
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
+        Person savedPerson = repository.save(person);
+        Person foundPerson = repository.findByID(savedPerson.getId());
+        assertThat(foundPerson).isEqualTo(savedPerson);
+    }
 
 }
