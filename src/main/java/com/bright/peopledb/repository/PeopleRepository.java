@@ -48,7 +48,7 @@ public class PeopleRepository {
     }
 
 
-    public Person findByID(Long id) {
+    public Optional<Person> findByID(Long id) {
         Person foundPerson = null;
         try(PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID_SQL)) {
             preparedStatement.setLong(1, id);
@@ -64,6 +64,6 @@ public class PeopleRepository {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return foundPerson;
+        return Optional.ofNullable(foundPerson);
     }
 }

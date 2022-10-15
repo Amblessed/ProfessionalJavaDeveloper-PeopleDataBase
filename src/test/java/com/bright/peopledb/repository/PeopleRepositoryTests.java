@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 class PeopleRepositoryTests {
@@ -83,8 +84,16 @@ class PeopleRepositoryTests {
         printNames(firstName, lastName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
         Person savedPerson = repository.save(person);
-        Person foundPerson = repository.findByID(savedPerson.getId());
+        Person foundPerson = repository.findByID(savedPerson.getId()).orElseThrow();
         assertThat(foundPerson).isEqualTo(savedPerson);
+    }
+
+    @Test
+    @DisplayName("Find an ID not existing in the Database")
+    void testPersonIdNotFound(){
+        Optional<Person> person = repository.findByID(-1L);
+        assertTrue(person.isEmpty());
+        assertThat(person).isEmpty();
     }
 
 }
