@@ -10,9 +10,11 @@ package com.bright.peopledb.model;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.time.ZonedDateTime;
 @Getter
+@ToString
 public class Person {
 
     @Setter
