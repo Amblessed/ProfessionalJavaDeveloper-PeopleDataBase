@@ -10,16 +10,19 @@ package com.bright.peopledb.repository;
 import com.bright.peopledb.model.Person;
 import com.github.javafaker.Faker;
 import com.github.javafaker.Name;
+import com.github.javafaker.Number;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PeopleRepositoryTests {
 
     private final Name name = new Faker().name();
+    private final Number number = new Faker().number();
     private Connection connection;
     private String firstName;
     private String lastName;
@@ -95,5 +99,51 @@ class PeopleRepositoryTests {
         assertTrue(person.isEmpty());
         assertThat(person).isEmpty();
     }
+    @Test
+    @DisplayName("Can find all the users in the Database")
+    void canFindAll() {
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+6"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("-4"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+3"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+2"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("-1"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+4"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+2"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("-6"))));
+        repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+8"))));
 
+        List<Person> people = repository.findAll();
+        assertThat(people).hasSizeGreaterThanOrEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("Can count the number of users in the database")
+    void canGetCount(){
+        long startCount = repository.count();
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
+        repository.save(person);
+        long endCount = repository.count();
+        assertThat(endCount).isEqualTo(startCount + 1);
+    }
+
+    @Test
+    @DisplayName("Can delete a user from the database")
+    void canDelete(){
+        Person savedPerson = repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8"))));
+        long startCount = repository.count();
+        repository.delete(savedPerson);
+        long endCount = repository.count();
+        assertThat(endCount).isEqualTo(startCount - 1);
+    }
+
+    @Test
+    @DisplayName("Can delete multiple users from the database")
+    void canDeleteMultiplePeople(){
+        Person savedPerson = repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8"))));
+        Person savedPerson2 = repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(1986, 10, 15, 12, 43, 0, 0, ZoneId.of("-8"))));
+        long startCount = repository.count();
+        repository.delete(savedPerson, savedPerson2);
+        long endCount = repository.count();
+        assertThat(endCount).isEqualTo(startCount - 2);
+    }
 }

@@ -28,11 +28,15 @@ public class Person {
     private String lastName;
     private ZonedDateTime dateOfBirth;
 
+    public Person(Long id, String firstName, String lastName, ZonedDateTime dateOfBirth) {
+        this(firstName, lastName, dateOfBirth);
+        this.id = id;
+    }
+
     public Person(String firstName, String lastName, ZonedDateTime dateOfBirth) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
-
     }
 
     public Long getId(){
