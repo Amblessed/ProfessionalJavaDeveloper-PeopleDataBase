@@ -55,14 +55,9 @@ class PeopleRepositoryTests {
         }
     }
 
-    void printNames(String firstName, String lastName){
-        System.out.printf("First Name: %s, Last Name: %s%n", firstName, lastName);
-    }
-
     @Test
     @DisplayName("Can save a single user in the Database")
     void canSaveOnePerson() {
-        printNames(firstName, lastName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11,15, 15, 15, 0, 0, ZoneId.of("-6")));
         Person savedPerson = repository.save(person);
         assertThat(savedPerson.getId()).isPositive();
@@ -71,11 +66,9 @@ class PeopleRepositoryTests {
     @Test
     @DisplayName("Can save two users in the Database")
     void canSaveTwoPerson(){
-        printNames(firstName, lastName);
         Person person1 = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
         firstName = name.firstName();
         lastName = name.lastName();
-        printNames(firstName, lastName);
         Person person2 = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
         Person savedPerson1 = repository.save(person1);
         Person savedPerson2 = repository.save(person2);
@@ -85,7 +78,6 @@ class PeopleRepositoryTests {
     @Test
     @DisplayName("Can find a user in DB by ID")
     void canFindPersonByID(){
-        printNames(firstName, lastName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
         Person savedPerson = repository.save(person);
         Person foundPerson = repository.findByID(savedPerson.getId()).orElseThrow();
@@ -130,7 +122,7 @@ class PeopleRepositoryTests {
     @Test
     @DisplayName("Can delete a user from the database")
     void canDelete(){
-        Person savedPerson = repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8"))));
+        Person savedPerson = repository.save(new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8"))));
         long startCount = repository.count();
         repository.delete(savedPerson);
         long endCount = repository.count();
@@ -168,6 +160,4 @@ class PeopleRepositoryTests {
         assertThat(foundPerson2).isNotNull();
         assertThat(foundPerson2.getSalary()).isNotEqualTo(foundPerson1.getSalary());
     }
-
-
 }
