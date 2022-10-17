@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -27,6 +28,13 @@ public class Person {
     private String firstName;
     private String lastName;
     private ZonedDateTime dateOfBirth;
+    @Setter
+    private BigDecimal salary = new BigDecimal("0");
+
+    public Person(Long id, String firstName, String lastName, ZonedDateTime dob, BigDecimal salary) {
+        this(id, firstName, lastName, dob);
+        this.salary = salary;
+    }
 
     public Person(Long id, String firstName, String lastName, ZonedDateTime dateOfBirth) {
         this(firstName, lastName, dateOfBirth);

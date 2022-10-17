@@ -123,6 +123,7 @@ class PeopleRepositoryTests {
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
         repository.save(person);
         long endCount = repository.count();
+        System.out.printf("StartCount: %d and EndCount: %d%n", startCount, endCount);
         assertThat(endCount).isEqualTo(startCount + 1);
     }
 
@@ -146,4 +147,27 @@ class PeopleRepositoryTests {
         long endCount = repository.count();
         assertThat(endCount).isEqualTo(startCount - 2);
     }
+
+    @Test
+    @DisplayName("Can update user details in the database")
+    void canUpdate(){
+        Person savedPerson = repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8"))));
+        Person foundPerson1 = null;
+        Person foundPerson2 = null;
+        System.out.println("savedPerson.getId(): " + savedPerson.getId());
+        System.out.println(savedPerson);
+        if(repository.findByID(savedPerson.getId()).isPresent()){
+           foundPerson1 = repository.findByID(savedPerson.getId()).get();
+        }
+        savedPerson.setSalary(new BigDecimal("73000.28"));
+        repository.update(savedPerson);
+        if(repository.findByID(savedPerson.getId()).isPresent()){
+            foundPerson2 = repository.findByID(savedPerson.getId()).get();
+        }
+        assertThat(foundPerson1).isNotNull();
+        assertThat(foundPerson2).isNotNull();
+        assertThat(foundPerson2.getSalary()).isNotEqualTo(foundPerson1.getSalary());
+    }
+
+
 }
