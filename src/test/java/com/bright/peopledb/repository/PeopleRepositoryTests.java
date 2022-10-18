@@ -1,9 +1,9 @@
 package com.bright.peopledb.repository;
 
 /*
- * @Project Name: PeopleDB
+ * @Project Name: ProfessionalJavaDeveloper-PeopleDataBase
  * @Author: Okechukwu Bright Onwumere
- * @Created: 22/08/2022
+ * @Created: 14/10/2022
  */
 
 

@@ -7,7 +7,7 @@ package com.bright.peopledb.model;
  */
 
 
-import lombok.AccessLevel;
+import com.bright.peopledb.annotation.Id;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -21,8 +21,7 @@ import java.util.Objects;
 @ToString
 public class Person {
 
-    @Setter
-    @Getter(AccessLevel.NONE)
+    @Id
     private Long id;
 
     private String firstName;
@@ -49,6 +48,10 @@ public class Person {
 
     public Long getId(){
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override
