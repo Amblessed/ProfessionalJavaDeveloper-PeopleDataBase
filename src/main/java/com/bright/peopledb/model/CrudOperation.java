@@ -15,5 +15,5 @@ public enum CrudOperation {
     DELETE_ONE,
     DELETE_MANY,
     COUNT,
-    NOT_FOUND;
+    ALTER,
 }

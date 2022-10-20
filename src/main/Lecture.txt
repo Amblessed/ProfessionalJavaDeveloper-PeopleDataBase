@@ -38,6 +38,8 @@ SELECT LAST_NAME, AVG(SALARY)FROM PERSON GROUP BY LAST_NAME;
 
 SELECT LAST_NAME, COUNT(*) FROM PERSON GROUP BY LAST_NAME;
 
+SELECT COUNT(*) FROM PERSON;
+
 SELECT UPPER(LAST_NAME), FIRST_NAME, DOB FROM PERSON;
 
 SELECT CONCAT(LAST_NAME, ', ', FIRST_NAME) AS NAME, DOB FROM PERSON;
@@ -61,3 +63,16 @@ UPDATE PERSON SET EMAIL='nothing@nowhere.com';
 ALTER TABLE PERSON DROP COLUMN EMAIL;
 
 SELECT * FROM PERSON;
+
+
+SELECT * FROM PERSON OFFSET 5000000 FETCH FIRST 1 ROW ONLY; (Skip 5000000 rows and take first row)
+
+CREATE INDEX ID_IDX ON PERSON(ID)
+Creating an index for a particular row on a table allows for faster searching here based on ID. Searching
+on another column name would result in slow search
+
+CREATE INDEX EMAIL_IDX ON PERSON(EMAIL);
+
+Know how the database would be used / searched by
+
+Inserting and Updating would be much longer now.

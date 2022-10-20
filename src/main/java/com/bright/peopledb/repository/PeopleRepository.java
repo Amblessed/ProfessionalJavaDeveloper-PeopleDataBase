@@ -19,13 +19,16 @@ import java.time.ZonedDateTime;
 
 public class PeopleRepository extends CRUDRepository<Person> {
 
-    public static final String SAVE_PERSON_SQL = "INSERT INTO PERSON (FIRST_NAME, LAST_NAME, DOB) VALUES(?, ?, ?)";
+    public static final String SAVE_PERSON_SQL = """
+    INSERT INTO PERSON (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL)
+    VALUES(?, ?, ?, ?, ?)""";
     public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON WHERE ID=?";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
     public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON";
     public static final String DELETE_ONE_SQL = "DELETE FROM PERSON WHERE ID=?";
     public static final String DELETE_MANY_SQL = "DELETE FROM PERSON WHERE ID IN (:ids)";
     public static final String UPDATE_SQL = "UPDATE PERSON SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?";
+    public static final String ALTER_TABLE_SQL = "ALTER TABLE PERSON ADD COLUMN EMAIL CHARACTER VARYING(255);";
 
     public PeopleRepository(Connection connection) {
         super(connection);
@@ -42,6 +45,8 @@ public class PeopleRepository extends CRUDRepository<Person> {
         preparedStatement.setString(1,entity.getFirstName());
         preparedStatement.setString(2,entity.getLastName());
         preparedStatement.setTimestamp(3, covertDobToTimestamp(entity.getDateOfBirth()));
+        preparedStatement.setBigDecimal(4,entity.getSalary());
+        preparedStatement.setString(5,entity.getEmail());
     }
 
     @Override
@@ -89,6 +94,11 @@ public class PeopleRepository extends CRUDRepository<Person> {
     @Override
     protected String getDeleteManySql() {
         return DELETE_MANY_SQL;
+    }
+
+    @Override
+    protected String getAlterTableSql() {
+        return ALTER_TABLE_SQL;
     }
 
     /**

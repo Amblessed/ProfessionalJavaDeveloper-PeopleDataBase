@@ -18,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 
 @Getter
+@Setter
 @ToString
 public class Person {
 
@@ -29,6 +30,8 @@ public class Person {
     private ZonedDateTime dateOfBirth;
     @Setter
     private BigDecimal salary = new BigDecimal("0");
+
+    private String email;
 
     public Person(Long id, String firstName, String lastName, ZonedDateTime dob, BigDecimal salary) {
         this(id, firstName, lastName, dob);
@@ -48,10 +51,6 @@ public class Person {
 
     public Long getId(){
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     @Override

@@ -22,7 +22,7 @@ import static java.util.stream.Collectors.joining;
 abstract class CRUDRepository<T> {
 
     protected final Connection connection;
-    private final String sql_statement_not_defined = "SQL Statement not defined";
+    private final String sqlStatementNotDefined = "SQL Statement not defined";
 
     protected CRUDRepository(Connection connection) {
         this.connection = connection;
@@ -40,9 +40,7 @@ abstract class CRUDRepository<T> {
             while (resultSet.next()){
                 long id = resultSet.getLong(1);
                 setIdByAnnotation(id, entity);
-                System.out.println(entity);
             }
-            System.out.printf("Records affected: %d%n", recordsAffected);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -141,6 +139,14 @@ abstract class CRUDRepository<T> {
         }
     }
 
+    public void alterTable() {
+        try(PreparedStatement preparedStatement = connection.prepareStatement(getSqlByAnnotation(CrudOperation.ALTER, this::getAlterTableSql))) {
+            preparedStatement.execute();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private String getSqlByAnnotation(CrudOperation crudOperation, Supplier<String> sqlGetter){
         Stream<SQL> multiSqlStream = Arrays.stream(this.getClass().getDeclaredMethods())
                 .filter(m -> m.isAnnotationPresent(MultiSQL.class))
@@ -187,16 +193,17 @@ abstract class CRUDRepository<T> {
     }
 
 
-    protected String getSaveSQL() { throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getSaveSQL() { throw new IllegalArgumentException(sqlStatementNotDefined);}
 
     /**
      * @return A String that represents the SQL statement needed to
      * retrieve one entity from the database. The SQL statement must contain
      * one SQL parameter, i.e "?", that will bind to the entity's ID.
      */
-    protected String getFindByIDSql(){ throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getFindByIDSql(){ throw new IllegalArgumentException(sqlStatementNotDefined);}
 
-    protected String getUpdateSql(){ throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getUpdateSql(){ throw new IllegalArgumentException(sqlStatementNotDefined);}
+    protected String getAlterTableSql(){ throw new IllegalArgumentException(sqlStatementNotDefined);}
 
     /**
      * @return A SQL statement for deleting multiple entities
@@ -204,24 +211,24 @@ abstract class CRUDRepository<T> {
      * "DELETE FROM *TABLENAME* WHERE ID IN (:ids)"
      * Be sure to include the '(:ids)' named parameter and call it 'ids'
      */
-    protected String getDeleteManySql() { throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getDeleteManySql() { throw new IllegalArgumentException(sqlStatementNotDefined);}
 
     /**
      * @return The SQL Statement for deleting an entity
      * in the database
      */
-    protected String getDeleteSql() { throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getDeleteSql() { throw new IllegalArgumentException(sqlStatementNotDefined);}
 
     /**
      * @return The SQL Statement to for getting the count
      * of the entities in the database
      */
-    protected String getCountSql() { throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getCountSql() { throw new IllegalArgumentException(sqlStatementNotDefined);}
 
     /**
      * @return The SQL Statement for getting all entities in the database
      */
-    protected String getFindAllSql() { throw new IllegalArgumentException(sql_statement_not_defined);}
+    protected String getFindAllSql() { throw new IllegalArgumentException(sqlStatementNotDefined);}
 
     abstract T extractEntityFromResultSet(ResultSet resultSet) throws SQLException;
 

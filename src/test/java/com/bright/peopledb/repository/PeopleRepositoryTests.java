@@ -16,12 +16,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -159,5 +162,34 @@ class PeopleRepositoryTests {
         assertThat(foundPerson1).isNotNull();
         assertThat(foundPerson2).isNotNull();
         assertThat(foundPerson2.getSalary()).isNotEqualTo(foundPerson1.getSalary());
+    }
+
+//    @Test
+//    @DisplayName("Can alter table in the database")
+//    void canAlterTable(){
+//        repository.alterTable();
+//    }
+
+    @Test
+    void loadData() throws IOException, SQLException {
+        long startTime = System.currentTimeMillis();
+        Files.lines(Path.of("src/test/resources/Hr5m.csv"))
+                .skip(1)
+                //.limit(100)
+                .map(line -> line.split(","))
+                .map(arr -> {
+                    LocalDate dateOfBirth = LocalDate.parse(arr[10], DateTimeFormatter.ofPattern("M/d/yyyy"));
+                    LocalTime timeOfBirth = LocalTime.parse(arr[11].toLowerCase(), DateTimeFormatter.ofPattern("hh:mm:ss a"));
+                    LocalDateTime localDateTime = LocalDateTime.of(dateOfBirth, timeOfBirth);
+                    ZonedDateTime zonedDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("+0"));
+                    Person person = new Person(arr[2], arr[4], zonedDateTime);
+                    person.setSalary(new BigDecimal(arr[25]));
+                    person.setEmail(arr[6]);
+                    return person;
+                })
+                .forEach(repository::save);
+        connection.commit();
+        long endTime = System.currentTimeMillis();
+        System.out.printf("Execution Time: %s", endTime - startTime);
     }
 }
