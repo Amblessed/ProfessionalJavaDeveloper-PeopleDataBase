@@ -8,6 +8,7 @@ package com.bright.peopledb.repository;
 
 
 import com.bright.peopledb.annotation.SQL;
+import com.bright.peopledb.model.Address;
 import com.bright.peopledb.model.CrudOperation;
 import com.bright.peopledb.model.Person;
 import org.jetbrains.annotations.NotNull;
@@ -16,13 +17,14 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
-public class PeopleRepository extends CRUDRepository<Person> {
+public class PersonRepository extends CrudRepository<Person> {
 
     public static final String SAVE_PERSON_SQL = """
-    INSERT INTO PERSON (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL)
-    VALUES(?, ?, ?, ?, ?)""";
-    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON WHERE ID=?";
+    INSERT INTO PERSON (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS)
+    VALUES(?, ?, ?, ?, ?, ?)""";
+    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY, HOME_ADDRESS  FROM PERSON WHERE ID=?";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
     public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON";
     public static final String DELETE_ONE_SQL = "DELETE FROM PERSON WHERE ID=?";
@@ -30,8 +32,11 @@ public class PeopleRepository extends CRUDRepository<Person> {
     public static final String UPDATE_SQL = "UPDATE PERSON SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?";
     public static final String ALTER_TABLE_SQL = "ALTER TABLE PERSON ADD COLUMN EMAIL CHARACTER VARYING(255);";
 
-    public PeopleRepository(Connection connection) {
+    private AddressRepository addressRepository;
+
+    public PersonRepository(Connection connection) {
         super(connection);
+        addressRepository = new AddressRepository(connection);
     }
 
     /**
@@ -42,11 +47,20 @@ public class PeopleRepository extends CRUDRepository<Person> {
     @Override
     @SQL(value = SAVE_PERSON_SQL, crudOperation = CrudOperation.SAVE)
     public void mapForSave(Person entity, PreparedStatement preparedStatement) throws SQLException {
+        Address savedAddress;
         preparedStatement.setString(1,entity.getFirstName());
         preparedStatement.setString(2,entity.getLastName());
         preparedStatement.setTimestamp(3, covertDobToTimestamp(entity.getDateOfBirth()));
         preparedStatement.setBigDecimal(4,entity.getSalary());
         preparedStatement.setString(5,entity.getEmail());
+        if (entity.getHomeAddress().isPresent()) {
+            savedAddress = addressRepository.save(entity.getHomeAddress().get());
+            preparedStatement.setLong(6, savedAddress.id());
+        }
+        else {
+            preparedStatement.setObject(6, null);
+        }
+
     }
 
     @Override
@@ -68,7 +82,11 @@ public class PeopleRepository extends CRUDRepository<Person> {
         String lastName = rs.getString("LAST_NAME");
         ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
         BigDecimal salary = rs.getBigDecimal("SALARY");
-        return new Person(personID, firstName, lastName, dob, salary);
+        long homeAddressId = rs.getLong("HOME_ADDRESS");
+        Optional<Address> homeAddress = addressRepository.findByID(homeAddressId);
+        Person person = new Person(personID, firstName, lastName, dob, salary);
+        person.setHomeAddress(homeAddress.orElse(null));
+        return person;
     }
 
     @Override

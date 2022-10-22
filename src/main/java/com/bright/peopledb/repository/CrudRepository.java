@@ -19,12 +19,12 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-abstract class CRUDRepository<T> {
+abstract class CrudRepository<T> {
 
     protected final Connection connection;
     private final String sqlStatementNotDefined = "SQL Statement not defined";
 
-    protected CRUDRepository(Connection connection) {
+    protected CrudRepository(Connection connection) {
         this.connection = connection;
     }
 

@@ -36,3 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Very large file hence ignore it ###
+Hr5m.csv

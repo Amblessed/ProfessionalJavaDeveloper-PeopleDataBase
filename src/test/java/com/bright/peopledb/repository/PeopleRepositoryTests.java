@@ -7,14 +7,13 @@ package com.bright.peopledb.repository;
  */
 
 
+import com.bright.peopledb.enums.Region;
+import com.bright.peopledb.model.Address;
 import com.bright.peopledb.model.Person;
 import com.github.javafaker.Faker;
 import com.github.javafaker.Name;
 import com.github.javafaker.Number;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.bright.peopledb.utilities.RandomAddress.getRandomAddress;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,13 +40,13 @@ class PeopleRepositoryTests {
     private Connection connection;
     private String firstName;
     private String lastName;
-    private PeopleRepository repository;
+    private PersonRepository repository;
 
     @BeforeEach
     void setUp() throws SQLException {
         connection = DriverManager.getConnection("jdbc:h2:~/peopletest".replace("~", System.getProperty("user.home")));
         connection.setAutoCommit(false); //changes made to the database are not saved as long as connection is open
-        repository = new PeopleRepository(connection);
+        repository = new PersonRepository(connection);
         firstName = name.firstName();
         lastName = name.lastName();
     }
@@ -79,6 +79,37 @@ class PeopleRepositoryTests {
     }
 
     @Test
+    @DisplayName("Can save a user with Address")
+    void canSavePersonWithAddress() {
+        System.out.println(firstName + " && " + lastName);
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
+        Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
+                getRandomAddress().get("city"), getRandomAddress().get("state"), getRandomAddress().get("zipCode"),
+                getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
+        person.setHomeAddress(address);
+
+        Person savedPerson = repository.save(person);
+        assertThat(savedPerson.getHomeAddress().get().id()).isPositive();
+        // connection.commit();
+    }
+
+    @Test
+    @DisplayName("Can find a user by ID with Address")
+    void canFindPersonByIdWithAddress() {
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
+        String state = getRandomAddress().get("state");
+        System.out.println(state);
+        Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
+                getRandomAddress().get("city"), state, getRandomAddress().get("zipCode"),
+                getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
+        person.setHomeAddress(address);
+        Person savedPerson = repository.save(person);
+        Person foundPerson = repository.findByID(savedPerson.getId()).get();
+        assertThat(foundPerson.getHomeAddress().get().state()).isEqualTo(state);
+        // connection.commit();
+    }
+
+    @Test
     @DisplayName("Can find a user in DB by ID")
     void canFindPersonByID(){
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
@@ -96,6 +127,7 @@ class PeopleRepositoryTests {
     }
     @Test
     @DisplayName("Can find all the users in the Database")
+    @Disabled("Takes a long time to run")
     void canFindAll() {
         repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+6"))));
         repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("-4"))));
@@ -164,13 +196,15 @@ class PeopleRepositoryTests {
         assertThat(foundPerson2.getSalary()).isNotEqualTo(foundPerson1.getSalary());
     }
 
-//    @Test
-//    @DisplayName("Can alter table in the database")
-//    void canAlterTable(){
-//        repository.alterTable();
-//    }
+    @Test
+    @Disabled("Not need every time")
+    @DisplayName("Can alter table in the database")
+    void canAlterTable(){
+        repository.alterTable();
+    }
 
     @Test
+    @Disabled("Data only needs to be load once into the database")
     void loadData() throws IOException, SQLException {
         long startTime = System.currentTimeMillis();
         Files.lines(Path.of("src/test/resources/Hr5m.csv"))
