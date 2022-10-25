@@ -187,7 +187,8 @@ abstract class CrudRepository<T> {
                     try {
                         f.set(entity, id);
                     } catch (IllegalAccessException e) {
-                        throw new RuntimeException("Unable to set ID field value");
+                        System.out.println("Unable to set ID field value");
+                        e.printStackTrace();
                     }
                 });
     }

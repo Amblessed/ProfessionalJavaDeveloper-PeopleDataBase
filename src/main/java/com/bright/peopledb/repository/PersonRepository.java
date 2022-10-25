@@ -8,6 +8,7 @@ package com.bright.peopledb.repository;
 
 
 import com.bright.peopledb.annotation.SQL;
+import com.bright.peopledb.enums.Region;
 import com.bright.peopledb.model.Address;
 import com.bright.peopledb.model.CrudOperation;
 import com.bright.peopledb.model.Person;
@@ -22,9 +23,16 @@ import java.util.Optional;
 public class PersonRepository extends CrudRepository<Person> {
 
     public static final String SAVE_PERSON_SQL = """
-    INSERT INTO PERSON (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS)
+    INSERT INTO PERSON
+    (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS)
     VALUES(?, ?, ?, ?, ?, ?)""";
-    public static final String FIND_BY_ID_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY, HOME_ADDRESS  FROM PERSON WHERE ID=?";
+    public static final String FIND_BY_ID_SQL = """
+    SELECT
+    P.ID, P.FIRST_NAME, P.LAST_NAME, P.DOB, P.SALARY, P.HOME_ADDRESS,
+    A.ID, A.STREET_ADDRESS, A.ADDRESS2, A.CITY, A.STATE, A.POSTCODE, A.COUNTY, A.REGION, A.COUNTRY
+    FROM PERSON AS P
+    LEFT OUTER JOIN ADDRESSES AS A ON P.HOME_ADDRESS = A.ID
+    WHERE P.ID=?""";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
     public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON";
     public static final String DELETE_ONE_SQL = "DELETE FROM PERSON WHERE ID=?";
@@ -82,10 +90,12 @@ public class PersonRepository extends CrudRepository<Person> {
         String lastName = rs.getString("LAST_NAME");
         ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
         BigDecimal salary = rs.getBigDecimal("SALARY");
-        long homeAddressId = rs.getLong("HOME_ADDRESS");
-        Optional<Address> homeAddress = addressRepository.findByID(homeAddressId);
+        //long homeAddressId = rs.getLong("HOME_ADDRESS");
+        //Address address = extractAddress(rs);
+
+        //Optional<Address> homeAddress = addressRepository.findByID(homeAddressId);
         Person person = new Person(personID, firstName, lastName, dob, salary);
-        person.setHomeAddress(homeAddress.orElse(null));
+        person.setHomeAddress(extractAddress(rs));
         return person;
     }
 
@@ -126,6 +136,19 @@ public class PersonRepository extends CrudRepository<Person> {
     @NotNull
     private static Timestamp covertDobToTimestamp(ZonedDateTime dob) {
         return Timestamp.valueOf(dob.withZoneSameInstant(ZoneId.of("+0")).toLocalDateTime());
+    }
+
+    private Address extractAddress(ResultSet resultSet) throws SQLException {
+        long id = resultSet.getLong("ID");
+        String streetAddress = resultSet.getString("STREET_ADDRESS");
+        String address2 = resultSet.getString("ADDRESS2");
+        String city = resultSet.getString("CITY");
+        String state = resultSet.getString("STATE");
+        String postcode = resultSet.getString("POSTCODE");
+        String county = resultSet.getString("COUNTY");
+        Region region = Region.valueOf(resultSet.getString("REGION").toUpperCase());
+        String country = resultSet.getString("COUNTRY");
+        return new Address(id, streetAddress, address2, city, state, postcode, country, county, region);
     }
 
 }

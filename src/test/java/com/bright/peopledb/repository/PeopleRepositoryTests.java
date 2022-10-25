@@ -197,7 +197,7 @@ class PeopleRepositoryTests {
     }
 
     @Test
-    @Disabled("Not need every time")
+    @Disabled("Not needed every time")
     @DisplayName("Can alter table in the database")
     void canAlterTable(){
         repository.alterTable();
