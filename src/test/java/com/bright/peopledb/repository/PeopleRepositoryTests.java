@@ -44,7 +44,7 @@ class PeopleRepositoryTests {
 
     @BeforeEach
     void setUp() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:h2:~/peopletest".replace("~", System.getProperty("user.home")));
+        connection = DriverManager.getConnection("jdbc:h2:~/peopletest;TRACE_LEVEL_SYSTEM_OUT=0".replace("~", System.getProperty("user.home")));
         connection.setAutoCommit(false); //changes made to the database are not saved as long as connection is open
         repository = new PersonRepository(connection);
         firstName = name.firstName();

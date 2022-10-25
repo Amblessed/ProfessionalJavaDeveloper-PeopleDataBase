@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import java.util.Optional;
 
 public class PersonRepository extends CrudRepository<Person> {
@@ -29,7 +30,7 @@ public class PersonRepository extends CrudRepository<Person> {
     public static final String FIND_BY_ID_SQL = """
     SELECT
     P.ID, P.FIRST_NAME, P.LAST_NAME, P.DOB, P.SALARY, P.HOME_ADDRESS,
-    A.ID, A.STREET_ADDRESS, A.ADDRESS2, A.CITY, A.STATE, A.POSTCODE, A.COUNTY, A.REGION, A.COUNTRY
+    A.ID AS A_ID, A.STREET_ADDRESS, A.ADDRESS2, A.CITY, A.STATE, A.POSTCODE, A.COUNTY, A.REGION, A.COUNTRY
     FROM PERSON AS P
     LEFT OUTER JOIN ADDRESSES AS A ON P.HOME_ADDRESS = A.ID
     WHERE P.ID=?""";
@@ -139,7 +140,11 @@ public class PersonRepository extends CrudRepository<Person> {
     }
 
     private Address extractAddress(ResultSet resultSet) throws SQLException {
-        long id = resultSet.getLong("ID");
+        Long addressId = getValueByAlias("A_ID", resultSet, Long.class);
+        if(Objects.isNull(addressId)){
+            return null;
+        }
+        //long addressId = resultSet.getLong("A_ID");
         String streetAddress = resultSet.getString("STREET_ADDRESS");
         String address2 = resultSet.getString("ADDRESS2");
         String city = resultSet.getString("CITY");
@@ -148,7 +153,17 @@ public class PersonRepository extends CrudRepository<Person> {
         String county = resultSet.getString("COUNTY");
         Region region = Region.valueOf(resultSet.getString("REGION").toUpperCase());
         String country = resultSet.getString("COUNTRY");
-        return new Address(id, streetAddress, address2, city, state, postcode, country, county, region);
+        return new Address(addressId, streetAddress, address2, city, state, postcode, country, county, region);
+    }
+
+    private <T> T getValueByAlias(String columnAlias, ResultSet resultSet, Class<T> clazz) throws SQLException {
+        int columnCount = resultSet.getMetaData().getColumnCount();
+        for(int colIdx=1; colIdx<=columnCount; colIdx++){
+            if(columnAlias.equals(resultSet.getMetaData().getColumnLabel(colIdx))){
+                return (T) resultSet.getObject(colIdx);
+            }
+        }
+        throw new SQLException(String.format("Column not found for alias: %s", columnAlias));
     }
 
 }
