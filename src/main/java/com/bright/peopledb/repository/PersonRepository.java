@@ -28,14 +28,15 @@ public class PersonRepository extends CrudRepository<Person> {
     (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS, BUSINESS_ADDRESS, PARENT_ID)
     VALUES(?, ?, ?, ?, ?, ?, ?, ?)""";
     public static final String FIND_BY_ID_SQL = """
-    SELECT
-    P.ID, P.FIRST_NAME, P.LAST_NAME, P.DOB, P.SALARY, P.HOME_ADDRESS,
+    SELECT PARENT.ID AS PARENT_ID, PARENT.FIRST_NAME AS PARENT_FIRST_NAME, PARENT.LAST_NAME AS PARENT_LAST_NAME, PARENT.DOB AS PARENT_DOB, PARENT.SALARY AS PARENT_SALARY, PARENT.EMAIL AS PARENT_EMAIL,
+    CHILD.ID AS CHILD_ID, CHILD.FIRST_NAME AS CHILD_FIRST_NAME, CHILD.LAST_NAME AS CHILD_LAST_NAME, CHILD.DOB AS CHILD_DOB, CHILD.SALARY AS CHILD_SALARY, CHILD.EMAIL AS CHILD_EMAIL,
     HOME.ID AS HOME_ID, HOME.STREET_ADDRESS AS HOME_STREET_ADDRESS, HOME.ADDRESS2 AS HOME_ADDRESS2, HOME.CITY AS HOME_CITY, HOME.STATE AS HOME_STATE, HOME.POSTCODE AS HOME_POSTCODE, HOME.COUNTY AS HOME_COUNTY, HOME.REGION AS HOME_REGION, HOME.COUNTRY AS HOME_COUNTRY,
-    BUSINESS.ID AS BUSINESS_ID, BUSINESS.STREET_ADDRESS AS BUSINESS_STREET_ADDRESS, BUSINESS.ADDRESS2 AS BUSINESS_ADDRESS2, BUSINESS.CITY AS BUSINESS_CITY, BUSINESS.STATE AS BUSINESS_STATE, BUSINESS.POSTCODE AS BUSINESS_POSTCODE, BUSINESS.COUNTY AS BUSINESS_COUNTY, BUSINESS.REGION AS BUSINESS_REGION, BUSINESS.COUNTRY AS BUSINESS_COUNTRY,
-    FROM PERSON AS P
-    LEFT OUTER JOIN ADDRESSES AS HOME ON P.HOME_ADDRESS = HOME.ID
-    LEFT OUTER JOIN ADDRESSES AS BUSINESS ON P.BUSINESS_ADDRESS = BUSINESS.ID
-    WHERE P.ID=?""";
+    BUSINESS.ID AS BUSINESS_ID, BUSINESS.STREET_ADDRESS AS BUSINESS_STREET_ADDRESS, BUSINESS.ADDRESS2 AS BUSINESS_ADDRESS2, BUSINESS.CITY AS BUSINESS_CITY, BUSINESS.STATE AS BUSINESS_STATE, BUSINESS.POSTCODE AS BUSINESS_POSTCODE, BUSINESS.COUNTY AS BUSINESS_COUNTY, BUSINESS.REGION AS BUSINESS_REGION, BUSINESS.COUNTRY AS BUSINESS_COUNTRY
+    FROM PERSON AS PARENT
+    LEFT OUTER JOIN PERSON AS CHILD ON PARENT.ID = CHILD.PARENT_ID
+    LEFT OUTER JOIN ADDRESSES AS HOME ON PARENT.HOME_ADDRESS = HOME.ID
+    LEFT OUTER JOIN ADDRESSES AS BUSINESS ON PARENT.BUSINESS_ADDRESS = BUSINESS.ID
+    WHERE PARENT.ID = ?""";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
     public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON";
     public static final String DELETE_ONE_SQL = "DELETE FROM PERSON WHERE ID=?";
@@ -109,15 +110,31 @@ public class PersonRepository extends CrudRepository<Person> {
     @SQL(value= GET_COUNT_SQL, crudOperation = CrudOperation.COUNT)
     @SQL(value= DELETE_ONE_SQL, crudOperation = CrudOperation.DELETE_ONE)
     Person extractEntityFromResultSet(ResultSet rs) throws SQLException {
-        long personID = rs.getLong("ID");
-        String firstName = rs.getString("FIRST_NAME");
-        String lastName = rs.getString("LAST_NAME");
-        ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
-        BigDecimal salary = rs.getBigDecimal("SALARY");
-        Person person = new Person(personID, firstName, lastName, dob, salary);
-        person.setHomeAddress(extractAddress(rs, "HOME_"));
-        person.setBusinessAddress(extractAddress(rs, "BUSINESS_"));
-        return person;
+        Person finalParent = null;
+        do {
+            Person currentParent = extractPerson(rs, "PARENT_");
+            if (Objects.isNull(finalParent)) {
+                finalParent = currentParent;
+            }
+            if (!finalParent.equals(currentParent)) {
+
+            }
+            Person child = extractPerson(rs, "CHILD_");
+            finalParent.setHomeAddress(extractAddress(rs, "HOME_"));
+            finalParent.setBusinessAddress(extractAddress(rs, "BUSINESS_"));
+            finalParent.addChild(child);
+        } while (rs.next());
+        return finalParent;
+    }
+
+    @NotNull
+    private Person extractPerson(ResultSet rs, String aliasPrefix) throws SQLException {
+        long personID = getValueByAlias( aliasPrefix + "ID", rs, Long.class);
+        String firstName = getValueByAlias(aliasPrefix + "FIRST_NAME", rs, String.class);
+        String lastName = getValueByAlias(aliasPrefix + "LAST_NAME", rs, String.class);
+        ZonedDateTime dob = ZonedDateTime.of(getValueByAlias(aliasPrefix + "DOB",rs, Timestamp.class).toLocalDateTime(), ZoneId.of("+0"));
+        BigDecimal salary = getValueByAlias(aliasPrefix + "SALARY", rs, BigDecimal.class);
+        return new Person(personID, firstName, lastName, dob, salary);
     }
 
     @Override

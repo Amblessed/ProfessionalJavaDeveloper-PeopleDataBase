@@ -19,6 +19,14 @@ public class RandomChild {
     private RandomChild(){}
 
     public static Person getRandomChild(String lastName, int yearDiff){
+        return getRandomPerson(new Faker().name().firstName(), lastName, yearDiff);
+    }
+
+    public static Person getRandomChild(String firstName, String lastName, int yearDiff){
+        return getRandomPerson(firstName, lastName, yearDiff);
+    }
+
+    private static Person getRandomPerson(String firstName, String lastName, int yearDiff){
         SecureRandom secureRandom = new SecureRandom();
         int month = secureRandom.nextInt(1,13);
         int dayBound = switch(month){
@@ -27,6 +35,6 @@ public class RandomChild {
             default -> 31;
         };
         int day = secureRandom.nextInt(1,dayBound);
-        return new Person(new Faker().name().firstName(), lastName, ZonedDateTime.of(2010 + yearDiff, month, day, 15, 15, 0, 0, ZoneId.of("-6")));
+        return new Person(firstName, lastName, ZonedDateTime.of(2010 + yearDiff, month, day, 15, 15, 0, 0, ZoneId.of("-6")));
     }
-}
+   }

@@ -27,9 +27,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.bright.peopledb.utilities.RandomAddress.getRandomAddress;
 import static com.bright.peopledb.utilities.RandomChild.getRandomChild;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -110,16 +112,18 @@ class PeopleRepositoryTests {
 
     @Test
     @DisplayName("Can save a user with Children")
-    void canSavePersonWithChildren() {
+    void canSavePersonWithChildren() throws SQLException {
+        System.out.println(firstName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
-        person.addChild(getRandomChild(lastName, 0));
-        person.addChild(getRandomChild(lastName, 2));
-        person.addChild(getRandomChild(lastName, 4));
+        person.addChild(getRandomChild("Bright",lastName, 0));
+        person.addChild(getRandomChild("Tochi",lastName, 2));
+        person.addChild(getRandomChild("Henry",lastName, 4));
 
         Person savedPerson = repository.save(person);
         savedPerson.getChildren().stream()
                         .map(Person::getId)
-                        .forEach(id -> assertThat(id).isGreaterThan(0));
+                        .forEach(id -> assertThat(id).isPositive());
+        connection.commit();
     }
 
 
@@ -161,6 +165,22 @@ class PeopleRepositoryTests {
         Person foundPerson = repository.findByID(savedPerson.getId()).orElseThrow();
         assertThat(foundPerson).isEqualTo(savedPerson);
     }
+
+    @Test
+    @DisplayName("Can find a user in DB by ID with Children")
+    void canFindPersonByIDWithChildren(){
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
+        person.addChild(getRandomChild("Bright", lastName, 0));
+        person.addChild(getRandomChild("Tochi", lastName, 2));
+        person.addChild(getRandomChild("Henry",lastName, 4));
+
+        Person savedPerson = repository.save(person);
+        Person foundPerson = repository.findByID(savedPerson.getId()).get();
+        assertThat(foundPerson.getChildren().stream()
+                .map(Person::getFirstName)
+                .collect(toSet())).contains("Bright", "Tochi", "Henry");
+    }
+
 
     @Test
     @DisplayName("Find an ID not existing in the Database")
