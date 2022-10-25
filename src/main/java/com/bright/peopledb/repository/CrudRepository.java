@@ -40,12 +40,15 @@ abstract class CrudRepository<T> {
             while (resultSet.next()){
                 long id = resultSet.getLong(1);
                 setIdByAnnotation(id, entity);
+                postSave(entity, id);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return entity;
     }
+
+
 
     /**
      * @param id of the user to find
@@ -205,6 +208,8 @@ abstract class CrudRepository<T> {
 
     protected String getUpdateSql(){ throw new IllegalArgumentException(sqlStatementNotDefined);}
     protected String getAlterTableSql(){ throw new IllegalArgumentException(sqlStatementNotDefined);}
+
+    protected void postSave(T entity, long id) {}
 
     /**
      * @return A SQL statement for deleting multiple entities

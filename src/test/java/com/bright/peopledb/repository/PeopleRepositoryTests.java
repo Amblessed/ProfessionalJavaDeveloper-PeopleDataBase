@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static com.bright.peopledb.utilities.RandomAddress.getRandomAddress;
+import static com.bright.peopledb.utilities.RandomChild.getRandomChild;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -111,14 +112,14 @@ class PeopleRepositoryTests {
     @DisplayName("Can save a user with Children")
     void canSavePersonWithChildren() {
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
-        Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
-                getRandomAddress().get("city"), getRandomAddress().get("state"), getRandomAddress().get("zipCode"),
-                getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
-        person.setBusinessAddress(address);
+        person.addChild(getRandomChild(lastName, 0));
+        person.addChild(getRandomChild(lastName, 2));
+        person.addChild(getRandomChild(lastName, 4));
 
         Person savedPerson = repository.save(person);
-        assertThat(savedPerson.getBusinessAddress().get().id()).isPositive();
-        // connection.commit();
+        savedPerson.getChildren().stream()
+                        .map(Person::getId)
+                        .forEach(id -> assertThat(id).isGreaterThan(0));
     }
 
 

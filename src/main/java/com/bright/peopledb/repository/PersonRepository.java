@@ -25,8 +25,8 @@ public class PersonRepository extends CrudRepository<Person> {
 
     public static final String SAVE_PERSON_SQL = """
     INSERT INTO PERSON
-    (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS, BUSINESS_ADDRESS)
-    VALUES(?, ?, ?, ?, ?, ?, ?)""";
+    (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS, BUSINESS_ADDRESS, PARENT_ID)
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?)""";
     public static final String FIND_BY_ID_SQL = """
     SELECT
     P.ID, P.FIRST_NAME, P.LAST_NAME, P.DOB, P.SALARY, P.HOME_ADDRESS,
@@ -58,7 +58,6 @@ public class PersonRepository extends CrudRepository<Person> {
     @Override
     @SQL(value = SAVE_PERSON_SQL, crudOperation = CrudOperation.SAVE)
     public void mapForSave(Person entity, PreparedStatement preparedStatement) throws SQLException {
-        Address savedAddress;
         preparedStatement.setString(1,entity.getFirstName());
         preparedStatement.setString(2,entity.getLastName());
         preparedStatement.setTimestamp(3, covertDobToTimestamp(entity.getDateOfBirth()));
@@ -66,6 +65,23 @@ public class PersonRepository extends CrudRepository<Person> {
         preparedStatement.setString(5,entity.getEmail());
         associateAddressWithPerson(preparedStatement, entity.getHomeAddress(), 6);
         associateAddressWithPerson(preparedStatement, entity.getBusinessAddress(), 7);
+        Optional<Person> parent = entity.getParent();
+        associateChildWithPerson(preparedStatement, parent);
+    }
+
+    private static void associateChildWithPerson(PreparedStatement preparedStatement, Optional<Person> parent) throws SQLException {
+        if(parent.isPresent()){
+            preparedStatement.setLong(8, parent.get().getId());
+        }
+        else{
+            preparedStatement.setObject(8, null);
+        }
+    }
+
+    @Override
+    protected void postSave(Person entity, long id) {
+       entity.getChildren()
+               .forEach(this::save);
     }
 
     private void associateAddressWithPerson(PreparedStatement preparedStatement, Optional<Address> address, int parameterIndex) throws SQLException {
