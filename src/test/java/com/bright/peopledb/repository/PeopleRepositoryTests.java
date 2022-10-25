@@ -80,7 +80,7 @@ class PeopleRepositoryTests {
 
     @Test
     @DisplayName("Can save a user with Address")
-    void canSavePersonWithAddress() {
+    void canSavePersonWithHomeAddress() {
         System.out.println(firstName + " && " + lastName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
         Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
@@ -94,11 +94,39 @@ class PeopleRepositoryTests {
     }
 
     @Test
-    @DisplayName("Can find a user by ID with Address")
-    void canFindPersonByIdWithAddress() {
+    @DisplayName("Can save a user with Business Address")
+    void canSavePersonWithBusinessAddress() {
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
+        Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
+                getRandomAddress().get("city"), getRandomAddress().get("state"), getRandomAddress().get("zipCode"),
+                getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
+        person.setBusinessAddress(address);
+
+        Person savedPerson = repository.save(person);
+        assertThat(savedPerson.getBusinessAddress().get().id()).isPositive();
+        // connection.commit();
+    }
+
+    @Test
+    @DisplayName("Can save a user with Children")
+    void canSavePersonWithChildren() {
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
+        Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
+                getRandomAddress().get("city"), getRandomAddress().get("state"), getRandomAddress().get("zipCode"),
+                getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
+        person.setBusinessAddress(address);
+
+        Person savedPerson = repository.save(person);
+        assertThat(savedPerson.getBusinessAddress().get().id()).isPositive();
+        // connection.commit();
+    }
+
+
+    @Test
+    @DisplayName("Can find a user by ID with Home Address")
+    void canFindPersonByIdWithHomeAddress() {
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
         String state = getRandomAddress().get("state");
-        System.out.println(state);
         Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
                 getRandomAddress().get("city"), state, getRandomAddress().get("zipCode"),
                 getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
@@ -106,6 +134,21 @@ class PeopleRepositoryTests {
         Person savedPerson = repository.save(person);
         Person foundPerson = repository.findByID(savedPerson.getId()).get();
         assertThat(foundPerson.getHomeAddress().get().state()).isEqualTo(state);
+        // connection.commit();
+    }
+
+    @Test
+    @DisplayName("Can find a user by ID with Business Address")
+    void canFindPersonByIdWithBusinessAddress() {
+        Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
+        String state = getRandomAddress().get("state");
+        Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
+                getRandomAddress().get("city"), state, getRandomAddress().get("zipCode"),
+                getRandomAddress().get("country"), getRandomAddress().get("county"), Region.EAST);
+        person.setBusinessAddress(address);
+        Person savedPerson = repository.save(person);
+        Person foundPerson = repository.findByID(savedPerson.getId()).get();
+        assertThat(foundPerson.getBusinessAddress().get().state()).isEqualTo(state);
         // connection.commit();
     }
 

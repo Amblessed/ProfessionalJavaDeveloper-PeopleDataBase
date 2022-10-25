@@ -25,14 +25,16 @@ public class PersonRepository extends CrudRepository<Person> {
 
     public static final String SAVE_PERSON_SQL = """
     INSERT INTO PERSON
-    (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS)
-    VALUES(?, ?, ?, ?, ?, ?)""";
+    (FIRST_NAME, LAST_NAME, DOB, SALARY, EMAIL, HOME_ADDRESS, BUSINESS_ADDRESS)
+    VALUES(?, ?, ?, ?, ?, ?, ?)""";
     public static final String FIND_BY_ID_SQL = """
     SELECT
     P.ID, P.FIRST_NAME, P.LAST_NAME, P.DOB, P.SALARY, P.HOME_ADDRESS,
-    A.ID AS A_ID, A.STREET_ADDRESS, A.ADDRESS2, A.CITY, A.STATE, A.POSTCODE, A.COUNTY, A.REGION, A.COUNTRY
+    HOME.ID AS HOME_ID, HOME.STREET_ADDRESS AS HOME_STREET_ADDRESS, HOME.ADDRESS2 AS HOME_ADDRESS2, HOME.CITY AS HOME_CITY, HOME.STATE AS HOME_STATE, HOME.POSTCODE AS HOME_POSTCODE, HOME.COUNTY AS HOME_COUNTY, HOME.REGION AS HOME_REGION, HOME.COUNTRY AS HOME_COUNTRY,
+    BUSINESS.ID AS BUSINESS_ID, BUSINESS.STREET_ADDRESS AS BUSINESS_STREET_ADDRESS, BUSINESS.ADDRESS2 AS BUSINESS_ADDRESS2, BUSINESS.CITY AS BUSINESS_CITY, BUSINESS.STATE AS BUSINESS_STATE, BUSINESS.POSTCODE AS BUSINESS_POSTCODE, BUSINESS.COUNTY AS BUSINESS_COUNTY, BUSINESS.REGION AS BUSINESS_REGION, BUSINESS.COUNTRY AS BUSINESS_COUNTRY,
     FROM PERSON AS P
-    LEFT OUTER JOIN ADDRESSES AS A ON P.HOME_ADDRESS = A.ID
+    LEFT OUTER JOIN ADDRESSES AS HOME ON P.HOME_ADDRESS = HOME.ID
+    LEFT OUTER JOIN ADDRESSES AS BUSINESS ON P.BUSINESS_ADDRESS = BUSINESS.ID
     WHERE P.ID=?""";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
     public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON";
@@ -62,14 +64,19 @@ public class PersonRepository extends CrudRepository<Person> {
         preparedStatement.setTimestamp(3, covertDobToTimestamp(entity.getDateOfBirth()));
         preparedStatement.setBigDecimal(4,entity.getSalary());
         preparedStatement.setString(5,entity.getEmail());
-        if (entity.getHomeAddress().isPresent()) {
-            savedAddress = addressRepository.save(entity.getHomeAddress().get());
-            preparedStatement.setLong(6, savedAddress.id());
+        associateAddressWithPerson(preparedStatement, entity.getHomeAddress(), 6);
+        associateAddressWithPerson(preparedStatement, entity.getBusinessAddress(), 7);
+    }
+
+    private void associateAddressWithPerson(PreparedStatement preparedStatement, Optional<Address> address, int parameterIndex) throws SQLException {
+        Address savedAddress;
+        if (address.isPresent()) {
+            savedAddress = addressRepository.save(address.get());
+            preparedStatement.setLong(parameterIndex, savedAddress.id());
         }
         else {
-            preparedStatement.setObject(6, null);
+            preparedStatement.setObject(parameterIndex, null);
         }
-
     }
 
     @Override
@@ -91,12 +98,9 @@ public class PersonRepository extends CrudRepository<Person> {
         String lastName = rs.getString("LAST_NAME");
         ZonedDateTime dob = ZonedDateTime.of(rs.getTimestamp("DOB").toLocalDateTime(), ZoneId.of("+0"));
         BigDecimal salary = rs.getBigDecimal("SALARY");
-        //long homeAddressId = rs.getLong("HOME_ADDRESS");
-        //Address address = extractAddress(rs);
-
-        //Optional<Address> homeAddress = addressRepository.findByID(homeAddressId);
         Person person = new Person(personID, firstName, lastName, dob, salary);
-        person.setHomeAddress(extractAddress(rs));
+        person.setHomeAddress(extractAddress(rs, "HOME_"));
+        person.setBusinessAddress(extractAddress(rs, "BUSINESS_"));
         return person;
     }
 
@@ -139,20 +143,20 @@ public class PersonRepository extends CrudRepository<Person> {
         return Timestamp.valueOf(dob.withZoneSameInstant(ZoneId.of("+0")).toLocalDateTime());
     }
 
-    private Address extractAddress(ResultSet resultSet) throws SQLException {
-        Long addressId = getValueByAlias("A_ID", resultSet, Long.class);
+    private Address extractAddress(ResultSet resultSet, String aliasPrefix) throws SQLException {
+        Long addressId = getValueByAlias(aliasPrefix + "ID", resultSet, Long.class);
         if(Objects.isNull(addressId)){
             return null;
         }
         //long addressId = resultSet.getLong("A_ID");
-        String streetAddress = resultSet.getString("STREET_ADDRESS");
-        String address2 = resultSet.getString("ADDRESS2");
-        String city = resultSet.getString("CITY");
-        String state = resultSet.getString("STATE");
-        String postcode = resultSet.getString("POSTCODE");
-        String county = resultSet.getString("COUNTY");
-        Region region = Region.valueOf(resultSet.getString("REGION").toUpperCase());
-        String country = resultSet.getString("COUNTRY");
+        String streetAddress = getValueByAlias(aliasPrefix + "STREET_ADDRESS",resultSet, String.class);
+        String address2 = getValueByAlias(aliasPrefix + "ADDRESS2",resultSet, String.class);
+        String city = getValueByAlias(aliasPrefix + "CITY",resultSet, String.class);
+        String state = getValueByAlias(aliasPrefix + "STATE",resultSet, String.class);
+        String postcode = getValueByAlias(aliasPrefix + "POSTCODE",resultSet, String.class);
+        String county = getValueByAlias(aliasPrefix + "COUNTY",resultSet, String.class);
+        Region region = Region.valueOf(getValueByAlias(aliasPrefix + "REGION",resultSet, String.class).toUpperCase());
+        String country = getValueByAlias(aliasPrefix + "COUNTRY",resultSet, String.class);
         return new Address(addressId, streetAddress, address2, city, state, postcode, country, county, region);
     }
 
