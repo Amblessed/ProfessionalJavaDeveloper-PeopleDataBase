@@ -151,7 +151,6 @@ class PeopleRepositoryTests {
         Person savedPerson = repository.save(person);
         Person foundPerson = repository.findByID(savedPerson.getId()).get();
         assertThat(foundPerson.getBusinessAddress().get().state()).isEqualTo(state);
-        // connection.commit();
     }
 
     @Test

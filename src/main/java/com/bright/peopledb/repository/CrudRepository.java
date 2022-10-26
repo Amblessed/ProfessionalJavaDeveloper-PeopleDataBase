@@ -24,8 +24,8 @@ abstract class CrudRepository<T> {
 
     protected Connection connection;
     private final String sqlStatementNotDefined = "SQL Statement not defined";
-    private PreparedStatement savePreparedStatement;
-    private PreparedStatement findByIDPreparedStatement;
+    private final PreparedStatement savePreparedStatement;
+    private final PreparedStatement findByIDPreparedStatement;
 
     protected CrudRepository(Connection connection) {
         try
