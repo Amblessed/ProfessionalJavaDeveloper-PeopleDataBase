@@ -10,6 +10,7 @@ package com.bright.peopledb.repository;
 import com.bright.peopledb.annotation.Id;
 import com.bright.peopledb.annotation.MultiSQL;
 import com.bright.peopledb.annotation.SQL;
+import com.bright.peopledb.exception.DataException;
 import com.bright.peopledb.model.CrudOperation;
 
 import java.sql.*;
@@ -21,11 +22,21 @@ import static java.util.stream.Collectors.joining;
 
 abstract class CrudRepository<T> {
 
-    protected final Connection connection;
+    protected Connection connection;
     private final String sqlStatementNotDefined = "SQL Statement not defined";
+    private PreparedStatement savePreparedStatement;
+    private PreparedStatement findByIDPreparedStatement;
 
     protected CrudRepository(Connection connection) {
-        this.connection = connection;
+        try
+        {
+            this.connection = connection;
+            savePreparedStatement = connection.prepareStatement(getSqlByAnnotation(CrudOperation.SAVE, this::getSaveSQL), Statement.RETURN_GENERATED_KEYS);
+            findByIDPreparedStatement = connection.prepareStatement(getSqlByAnnotation(CrudOperation.FIND_BY_ID, this::getFindByIDSql));
+        } catch (SQLException e) {
+           e.printStackTrace();
+           throw new DataException("Unable to create prepared statements for CrudRepository");
+        }
     }
 
     /**
@@ -33,10 +44,10 @@ abstract class CrudRepository<T> {
      * @return The saved person in the database
      */
     public T save(T entity){
-        try(PreparedStatement preparedStatement = connection.prepareStatement(getSqlByAnnotation(CrudOperation.SAVE, this::getSaveSQL), Statement.RETURN_GENERATED_KEYS)) {
-            mapForSave(entity, preparedStatement);
-            int recordsAffected = preparedStatement.executeUpdate(); //to execute the query
-            ResultSet resultSet = preparedStatement.getGeneratedKeys();
+        try{
+            mapForSave(entity, savePreparedStatement);
+            int recordsAffected = savePreparedStatement.executeUpdate(); //to execute the query
+            ResultSet resultSet = savePreparedStatement.getGeneratedKeys();
             while (resultSet.next()){
                 long id = resultSet.getLong(1);
                 setIdByAnnotation(id, entity);
@@ -48,17 +59,15 @@ abstract class CrudRepository<T> {
         return entity;
     }
 
-
-
     /**
      * @param id of the user to find
      * @return the person if found else null
      */
     public Optional<T> findByID(Long id) {
         T entity = null;
-        try(PreparedStatement preparedStatement = connection.prepareStatement(getSqlByAnnotation(CrudOperation.FIND_BY_ID, this::getFindByIDSql))) {
-            preparedStatement.setLong(1, id);
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try {
+            findByIDPreparedStatement.setLong(1, id);
+            ResultSet resultSet = findByIDPreparedStatement.executeQuery();
             while(resultSet.next()){
                 entity = extractEntityFromResultSet(resultSet);
             }
