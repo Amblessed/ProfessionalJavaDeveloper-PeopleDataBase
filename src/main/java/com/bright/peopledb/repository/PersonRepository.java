@@ -38,7 +38,11 @@ public class PersonRepository extends CrudRepository<Person> {
     LEFT OUTER JOIN ADDRESSES AS BUSINESS ON PARENT.BUSINESS_ADDRESS = BUSINESS.ID
     WHERE PARENT.ID = ?""";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
-    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON FETCH FIRST 100 ROWS ONLY";
+    public static final String FIND_ALL_SQL = """
+    SELECT PARENT.ID AS PARENT_ID, PARENT.FIRST_NAME AS PARENT_FIRST_NAME, PARENT.LAST_NAME AS PARENT_LAST_NAME, PARENT.DOB AS PARENT_DOB, PARENT.SALARY AS PARENT_SALARY, PARENT.EMAIL AS PARENT_EMAIL
+    FROM PERSON AS PARENT
+    FETCH FIRST 100 ROWS ONLY
+    """;
     public static final String DELETE_ONE_SQL = "DELETE FROM PERSON WHERE ID=?";
     public static final String DELETE_MANY_SQL = "DELETE FROM PERSON WHERE ID IN (:ids)";
     public static final String UPDATE_SQL = "UPDATE PERSON SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?";
@@ -117,7 +121,8 @@ public class PersonRepository extends CrudRepository<Person> {
                 finalParent = currentParent;
             }
             if (!finalParent.equals(currentParent)) {
-
+                rs.previous();
+                break;
             }
             Optional<Person> child = extractPerson(rs, "CHILD_");
             finalParent.setHomeAddress(extractAddress(rs, "HOME_"));
@@ -214,7 +219,7 @@ public class PersonRepository extends CrudRepository<Person> {
                 return (T) resultSet.getObject(colIdx);
             }
         }
-        throw new SQLException(String.format("Column not found for alias: %s", columnAlias));
+        return null;
     }
 
 }

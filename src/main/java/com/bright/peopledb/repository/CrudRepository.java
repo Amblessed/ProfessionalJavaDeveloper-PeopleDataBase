@@ -73,7 +73,8 @@ abstract class CrudRepository<T> {
      */
     public List<T> findAll() {
         List<T> entities = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement(getSqlByAnnotation(CrudOperation.FIND_ALL, this::getFindAllSql))){
+        try (PreparedStatement ps = connection.prepareStatement(getSqlByAnnotation(CrudOperation.FIND_ALL, this::getFindAllSql),
+                ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)){
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 entities.add(extractEntityFromResultSet(rs));
