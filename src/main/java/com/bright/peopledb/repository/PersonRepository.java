@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -47,6 +49,8 @@ public class PersonRepository extends CrudRepository<Person> {
     public static final String DELETE_MANY_SQL = "DELETE FROM PERSON WHERE ID IN (:ids)";
     public static final String UPDATE_SQL = "UPDATE PERSON SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?";
     public static final String ALTER_TABLE_SQL = "ALTER TABLE PERSON ADD COLUMN EMAIL CHARACTER VARYING(255);";
+
+    private Map<String, Integer> aliasColumnIndexMap = new HashMap<>();
 
     private AddressRepository addressRepository;
 
@@ -128,7 +132,6 @@ public class PersonRepository extends CrudRepository<Person> {
             finalParent.setHomeAddress(extractAddress(rs, "HOME_"));
             finalParent.setBusinessAddress(extractAddress(rs, "BUSINESS_"));
             child.ifPresent(finalParent::addChild);
-            //finalParent.addChild(child);
         } while (rs.next());
         return finalParent;
     }
@@ -200,7 +203,6 @@ public class PersonRepository extends CrudRepository<Person> {
         if(Objects.isNull(addressId)){
             return null;
         }
-        //long addressId = resultSet.getLong("A_ID");
         String streetAddress = getValueByAlias(aliasPrefix + "STREET_ADDRESS",resultSet, String.class);
         String address2 = getValueByAlias(aliasPrefix + "ADDRESS2",resultSet, String.class);
         String city = getValueByAlias(aliasPrefix + "CITY",resultSet, String.class);
@@ -214,12 +216,22 @@ public class PersonRepository extends CrudRepository<Person> {
 
     private <T> T getValueByAlias(String columnAlias, ResultSet resultSet, Class<T> clazz) throws SQLException {
         int columnCount = resultSet.getMetaData().getColumnCount();
-        for(int colIdx=1; colIdx<=columnCount; colIdx++){
-            if(columnAlias.equals(resultSet.getMetaData().getColumnLabel(colIdx))){
-                return (T) resultSet.getObject(colIdx);
+        int foundIdx = getIndexForAlias(columnAlias, resultSet, columnCount);
+        return foundIdx == 0 ? null: (T) resultSet.getObject(foundIdx);
+    }
+
+    private int getIndexForAlias(String columnAlias, ResultSet resultSet, int columnCount) throws SQLException {
+        Integer foundIdx = aliasColumnIndexMap.getOrDefault(columnAlias, 0);
+        if (foundIdx == 0) {
+            for(int colIdx = 1; colIdx<=columnCount; colIdx++){
+                if(columnAlias.equals(resultSet.getMetaData().getColumnLabel(colIdx))){
+                    foundIdx = colIdx;
+                    aliasColumnIndexMap.put(columnAlias, foundIdx);
+                    break;
+                }
             }
         }
-        return null;
+        return foundIdx;
     }
 
 }
