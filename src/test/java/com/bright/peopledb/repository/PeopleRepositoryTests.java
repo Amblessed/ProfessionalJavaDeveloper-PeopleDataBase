@@ -83,7 +83,6 @@ class PeopleRepositoryTests {
     @Test
     @DisplayName("Can save a user with Address")
     void canSavePersonWithHomeAddress() {
-        System.out.println(firstName + " && " + lastName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
         Address address = new Address(null, getRandomAddress().get("strAdd"), getRandomAddress().get("secAdd"),
                 getRandomAddress().get("city"), getRandomAddress().get("state"), getRandomAddress().get("zipCode"),
@@ -112,7 +111,6 @@ class PeopleRepositoryTests {
     @Test
     @DisplayName("Can save a user with Children")
     void canSavePersonWithChildren() throws SQLException {
-        System.out.println(firstName);
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1980, 11, 15, 15, 15, 0, 0, ZoneId.of("-6")));
         person.addChild(getRandomChild("Bright",lastName, 0));
         person.addChild(getRandomChild("Tochi",lastName, 2));
@@ -190,7 +188,7 @@ class PeopleRepositoryTests {
     }
     @Test
     @DisplayName("Can find all the users in the Database")
-    @Disabled("Takes a long time to run")
+    //@Disabled("Takes a long time to run")
     void canFindAll() {
         repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("+6"))));
         repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(number.numberBetween(1980, 1990), 11, 15, 15, 15, 0, 0, ZoneId.of("-4"))));
@@ -213,7 +211,6 @@ class PeopleRepositoryTests {
         Person person = new Person(firstName, lastName, ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8")));
         repository.save(person);
         long endCount = repository.count();
-        System.out.printf("StartCount: %d and EndCount: %d%n", startCount, endCount);
         assertThat(endCount).isEqualTo(startCount + 1);
     }
 

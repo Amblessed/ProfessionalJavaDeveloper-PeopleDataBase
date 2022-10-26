@@ -38,7 +38,7 @@ public class PersonRepository extends CrudRepository<Person> {
     LEFT OUTER JOIN ADDRESSES AS BUSINESS ON PARENT.BUSINESS_ADDRESS = BUSINESS.ID
     WHERE PARENT.ID = ?""";
     public static final String GET_COUNT_SQL = "SELECT COUNT(*) FROM PERSON";
-    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON";
+    public static final String FIND_ALL_SQL = "SELECT ID, FIRST_NAME, LAST_NAME, DOB, SALARY FROM PERSON FETCH FIRST 100 ROWS ONLY";
     public static final String DELETE_ONE_SQL = "DELETE FROM PERSON WHERE ID=?";
     public static final String DELETE_MANY_SQL = "DELETE FROM PERSON WHERE ID IN (:ids)";
     public static final String UPDATE_SQL = "UPDATE PERSON SET FIRST_NAME=?, LAST_NAME=?, DOB=?, SALARY=? WHERE ID=?";
@@ -112,17 +112,18 @@ public class PersonRepository extends CrudRepository<Person> {
     Person extractEntityFromResultSet(ResultSet rs) throws SQLException {
         Person finalParent = null;
         do {
-            Person currentParent = extractPerson(rs, "PARENT_");
+            Person currentParent = extractPerson(rs, "PARENT_").get();
             if (Objects.isNull(finalParent)) {
                 finalParent = currentParent;
             }
             if (!finalParent.equals(currentParent)) {
 
             }
-            Person child = extractPerson(rs, "CHILD_");
+            Optional<Person> child = extractPerson(rs, "CHILD_");
             finalParent.setHomeAddress(extractAddress(rs, "HOME_"));
             finalParent.setBusinessAddress(extractAddress(rs, "BUSINESS_"));
-            finalParent.addChild(child);
+            child.ifPresent(finalParent::addChild);
+            //finalParent.addChild(child);
         } while (rs.next());
         return finalParent;
     }
@@ -134,13 +135,16 @@ public class PersonRepository extends CrudRepository<Person> {
      * @throws SQLException thrown
      */
     @NotNull
-    private Person extractPerson(ResultSet rs, String aliasPrefix) throws SQLException {
-        long personID = getValueByAlias( aliasPrefix + "ID", rs, Long.class);
+    private Optional<Person> extractPerson(ResultSet rs, String aliasPrefix) throws SQLException {
+        Long personID = getValueByAlias( aliasPrefix + "ID", rs, Long.class);
+        if (Objects.isNull(personID)) {
+            return Optional.empty();
+        }
         String firstName = getValueByAlias(aliasPrefix + "FIRST_NAME", rs, String.class);
         String lastName = getValueByAlias(aliasPrefix + "LAST_NAME", rs, String.class);
         ZonedDateTime dob = ZonedDateTime.of(getValueByAlias(aliasPrefix + "DOB",rs, Timestamp.class).toLocalDateTime(), ZoneId.of("+0"));
         BigDecimal salary = getValueByAlias(aliasPrefix + "SALARY", rs, BigDecimal.class);
-        return new Person(personID, firstName, lastName, dob, salary);
+        return Optional.of(new Person(personID, firstName, lastName, dob, salary));
     }
 
     /**
