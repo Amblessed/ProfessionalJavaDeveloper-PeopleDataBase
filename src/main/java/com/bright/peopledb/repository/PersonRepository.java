@@ -127,6 +127,12 @@ public class PersonRepository extends CrudRepository<Person> {
         return finalParent;
     }
 
+    /**
+     * @param rs Result Set
+     * @param aliasPrefix Alias Prefix for the column names
+     * @return A new Person from the result set
+     * @throws SQLException thrown
+     */
     @NotNull
     private Person extractPerson(ResultSet rs, String aliasPrefix) throws SQLException {
         long personID = getValueByAlias( aliasPrefix + "ID", rs, Long.class);
@@ -137,6 +143,10 @@ public class PersonRepository extends CrudRepository<Person> {
         return new Person(personID, firstName, lastName, dob, salary);
     }
 
+    /**
+     * @return The SQL Statement needed to find an entry in
+     * the database by its ID.
+     */
     @Override
     protected String getFindByIDSql() {
         return FIND_BY_ID_SQL;

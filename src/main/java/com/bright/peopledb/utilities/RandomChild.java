@@ -26,6 +26,12 @@ public class RandomChild {
         return getRandomPerson(firstName, lastName, yearDiff);
     }
 
+    /**
+     * @param firstName random first name for a child
+     * @param lastName random last name for a child
+     * @param yearDiff additional years to add to the base year of 2010
+     * @return A new Person with the above data.
+     */
     private static Person getRandomPerson(String firstName, String lastName, int yearDiff){
         SecureRandom secureRandom = new SecureRandom();
         int month = secureRandom.nextInt(1,13);

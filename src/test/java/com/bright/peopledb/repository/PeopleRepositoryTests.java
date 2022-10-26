@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.bright.peopledb.utilities.RandomAddress.getRandomAddress;
 import static com.bright.peopledb.utilities.RandomChild.getRandomChild;
@@ -245,8 +244,6 @@ class PeopleRepositoryTests {
         Person savedPerson = repository.save(new Person(name.firstName(), name.lastName(), ZonedDateTime.of(1982, 9, 25, 13, 13, 0, 0, ZoneId.of("-8"))));
         Person foundPerson1 = null;
         Person foundPerson2 = null;
-        System.out.println("savedPerson.getId(): " + savedPerson.getId());
-        System.out.println(savedPerson);
         if(repository.findByID(savedPerson.getId()).isPresent()){
            foundPerson1 = repository.findByID(savedPerson.getId()).get();
         }
